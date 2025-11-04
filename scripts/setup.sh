@@ -7,11 +7,6 @@ sudo apt update && sudo apt upgrade -y
 # Idempotent setup script for host directories, docker volumes, and essential tools.
 # Respects environment variables if set; otherwise falls back to sensible defaults.
 
-DATA_DIR="${DATA_DIR:-$(pwd)/data}"
-JENKINS_VOLUME="${JENKINS_VOLUME:-jenkins_data}"
-GITEA_VOLUME="${GITEA_VOLUME:-gitea_data}"
-POSTGRES_VOLUME="${POSTGRES_VOLUME:-pg_data}"
-
 info()    { echo "[setup] $*"; }
 error()   { echo "[setup] ERROR: $*" >&2; }
 
@@ -83,6 +78,18 @@ install_cockpit() {
     sudo systemctl enable --now cockpit.socket
 }
 
+install_zsh() {
+    if command -v zsh >/dev/null 2>&1; then
+        info "Zsh already installed."
+        return 0
+    fi
+    info "Installing Zsh..."
+    sudo apt install -y zsh
+    info "Installing Oh My Zsh..."
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" || info "Oh My Zsh install script exited (may require user interaction or already installed)"
+    info "To set Zsh as your default shell, run: chsh -s $(which zsh)"
+}
+
 setup_volumes_and_dirs() {
     if ! command -v docker >/dev/null 2>&1; then
         error "docker is not installed or not in PATH"
@@ -101,6 +108,7 @@ main() {
     install_gh_cli
     install_terraform
     install_cockpit
+    install_zsh
     setup_volumes_and_dirs
     info "Setup complete. You can now run 'make up' to start services."
 }
