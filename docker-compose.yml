@@ -1,0 +1,37 @@
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins_server
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_data:/var/jenkins_home
+    env_file:
+      - .env
+
+  gitea:
+    image: gitea/gitea:1.25
+    container_name: gitea_server
+    ports:
+      - "3000:3000"
+      - "222:22"
+    volumes:
+      - gitea_data:/data
+    env_file:
+      - .env
+
+  postgres:
+    image: postgres:18.0-alpine
+    container_name: postgres_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+
+volumes:
+  jenkins_data:
+  gitea_data:
+  pg_data:
