@@ -30,8 +30,47 @@ services:
       - pg_data:/var/lib/postgresql/data
     env_file:
       - .env
+  n8n:
+    image: n8nio/n8n:stable
+    container_name: n8n_server
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    env_file:
+      - .env
+
+  nginx:
+    image: nginx:stable
+    container_name: nginx_server
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+    depends_on:
+      - n8n
+  
+  jupyter:
+    build: ./docker/jupyter
+    container_name: jupyter_server
+    ports:
+      - "8888:8888"
+    volumes:
+      - jupyter_data:/home/jovyan/work
+      - ./notebooks:/home/jovyan/notebooks
+      - ./src:/home/jovyan/src
+      - ./data:/home/jovyan/data
+      - ./config:/home/jovyan/config
+    env_file:
+      - .env
+    restart: unless-stopped      
 
 volumes:
   jenkins_data:
   gitea_data:
   pg_data:
+  n8n_data:
+  jupyter_data:
