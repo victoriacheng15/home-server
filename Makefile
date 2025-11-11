@@ -24,19 +24,19 @@ setup:
 up:
 ifdef SERVICE
 	@echo "Starting $(SERVICE) service..."
-	@docker-compose up -d $(SERVICE)
+	@docker compose up -d $(SERVICE)
 else
 	@echo "Starting all services..."
-	@docker-compose up -d
+	@docker compose up -d
 endif
 
 down:
 ifdef SERVICE
 	@echo "Stopping $(SERVICE) service..."
-	@docker-compose down $(SERVICE)
+	@docker compose down $(SERVICE)
 else
 	@echo "Stopping all services..."
-	@docker-compose down
+	@docker compose down
 endif
 
 logs:
