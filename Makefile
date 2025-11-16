@@ -38,11 +38,3 @@ else
 	@echo "Stopping all services..."
 	@docker compose down
 endif
-
-logs:
-	@echo "Tailing logs for $(SERVICE) service..."
-	docker logs -f $($(shell echo $(SERVICE) | tr a-z A-Z)_SERVER)
-
-exec:
-	@echo "Accessing shell for $(SERVICE) service..."
-	docker exec -it $($(shell echo $(SERVICE) | tr a-z A-Z)_SERVER) /bin/bash
