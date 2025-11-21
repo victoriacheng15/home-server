@@ -3,11 +3,11 @@
 # --- CONFIG ---
 BACKUP_BASE="$HOME/backups"      # Change to your backup location
 VOLUMES=(
-  "home-server_gitea_data"
-  "home-server_jenkins_data"
-  "home-server_pg_data"
-  "home-server_n8n_data"
-  "home-server_jupyter_data"
+  "gitea_data"
+  "jenkins_data"
+  "postgres_data"
+  "n8n_data"
+  "jupyter_data"
 )
 RETENTION_DAYS=7
 

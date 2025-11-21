@@ -3,6 +3,8 @@
 # --------------------------------------
 # Detect the latest backup folder
 # --------------------------------------
+YELLOW='\033[1;33m'
+RESET='\033[0m'
 BACKUP_BASE="$HOME/backups"
 BACKUP_DIR=$(ls -d "$BACKUP_BASE"/*/ | sort -V | tail -n 1)
 
@@ -15,11 +17,11 @@ echo "Using latest backup folder: $BACKUP_DIR"
 
 # Map backup filename → docker volume name
 declare -A VOLUMES=(
-    ["home-server_jenkins_data.tar.gz"]="jenkins_data"
-    ["home-server_jupyter_data.tar.gz"]="jupyter_data"
-    ["home-server_n8n_data.tar.gz"]="n8n_data"
-    ["home-server_pg_data.tar.gz"]="pg_data"
-    ["home-server_gitea_data.tar.gz"]="gitea_data"
+    ["gitea_data.tar.gz"]="gitea_data"
+    ["jenkins_data.tar.gz"]="jenkins_data"
+    ["jupyter_data.tar.gz"]="jupyter_data"
+    ["n8n_data.tar.gz"]="n8n_data"
+    ["pg_data.tar.gz"]="postgres_data"
 )
 
 echo "Stopping Docker Compose services..."

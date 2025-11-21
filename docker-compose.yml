@@ -10,8 +10,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - jenkins_data:/var/jenkins_home
       - /usr/bin/docker:/usr/bin/docker
-    env_file:
-      - .env
+    restart: unless-stopped
 
   gitea:
     image: gitea/gitea:1.25
@@ -21,8 +20,7 @@ services:
       - "222:22"
     volumes:
       - gitea_data:/data
-    env_file:
-      - .env
+    restart: unless-stopped
 
   postgres:
     image: postgres:18.0-alpine
@@ -30,9 +28,10 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pg_data:/var/lib/postgresql/data
-    env_file:
-      - .env
+      - postgres_data:/var/lib/postgresql/data
+      - ./pg-provider/initdb:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
   n8n:
     image: n8nio/n8n:stable
     container_name: n8n_server
@@ -40,8 +39,7 @@ services:
       - "5678:5678"
     volumes:
       - n8n_data:/home/node/.n8n
-    env_file:
-      - .env
+    restart: unless-stopped
   
   jupyter:
     build: ./docker/jupyter
@@ -60,7 +58,12 @@ services:
 
 volumes:
   jenkins_data:
+    external: true 
   gitea_data:
-  pg_data:
+    external: true 
+  postgres_data:
+    external: true 
   n8n_data:
+    external: true 
   jupyter_data:
+    external: true 
