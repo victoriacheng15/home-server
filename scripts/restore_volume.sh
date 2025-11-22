@@ -1,65 +1,77 @@
 #!/bin/bash
 
-# --------------------------------------
-# Detect the latest backup folder
-# --------------------------------------
+# Colors
 YELLOW='\033[1;33m'
+GREEN='\033[1;32m'
+RED='\033[1;31m'
 RESET='\033[0m'
-BACKUP_BASE="$HOME/backups"
-BACKUP_DIR=$(ls -d "$BACKUP_BASE"/*/ | sort -V | tail -n 1)
 
-if [ -z "$BACKUP_DIR" ]; then
-    echo "No dated backup folders found in: $BACKUP_BASE"
-    exit 1
+BACKUP_BASE="$HOME/backups"
+VOLUMES_FILE="./volumes.list"
+
+# --- VALIDATION ---
+if [[ ! -f "$VOLUMES_FILE" ]]; then
+  echo -e "${RED}❌ ERROR: $VOLUMES_FILE not found. Run from project root.${RESET}" >&2
+  exit 1
 fi
 
-echo "Using latest backup folder: $BACKUP_DIR"
+# Load volume names (same as setup/backup)
+mapfile -t VOLUME_NAMES < <(grep -v '^[[:space:]]*#' "$VOLUMES_FILE" | grep -v '^$')
+if [[ ${#VOLUME_NAMES[@]} -eq 0 ]]; then
+  echo -e "${RED}❌ ERROR: No volumes in $VOLUMES_FILE${RESET}" >&2
+  exit 1
+fi
 
-# Map backup filename → docker volume name
-declare -A VOLUMES=(
-    ["gitea_data.tar.gz"]="gitea_data"
-    ["jenkins_data.tar.gz"]="jenkins_data"
-    ["jupyter_data.tar.gz"]="jupyter_data"
-    ["n8n_data.tar.gz"]="n8n_data"
-    ["pg_data.tar.gz"]="postgres_data"
-)
+# --- FIND LATEST BACKUP ---
+BACKUP_DIR=$(ls -1dt "$BACKUP_BASE"/20[0-9][0-9]-[0-1][0-9]-[0-3][0-9]/ 2>/dev/null | head -n1)
 
-echo "Stopping Docker Compose services..."
-docker compose down
+if [[ -z "$BACKUP_DIR" ]]; then
+  echo -e "${RED}❌ No dated backup folders found in: $BACKUP_BASE${RESET}" >&2
+  exit 1
+fi
 
-# --------------------------------------
-# Restore each volume
-# --------------------------------------
-for FILE in "${!VOLUMES[@]}"; do
-    VOLUME_NAME="${VOLUMES[$FILE]}"
-    BACKUP_FILE="$BACKUP_DIR$FILE"
+echo -e "${GREEN}📁 Using latest backup: $(basename "$BACKUP_DIR")${RESET}"
 
-    if [ ! -f "$BACKUP_FILE" ]; then
-        echo "⚠️  Warning: Backup file not found: $BACKUP_FILE"
-        continue
-    fi
+# --- STOP SERVICES SAFELY ---
+echo "🛑 Stopping Docker Compose services..."
+if ! docker compose down; then
+  echo -e "${YELLOW}⚠️  Warning: Some services may not have stopped cleanly.${RESET}"
+fi
 
-    echo "Restoring volume: $VOLUME_NAME from $FILE"
+# --- RESTORE EACH VOLUME ---
+for vol in "${VOLUME_NAMES[@]}"; do
+  vol="${vol//[$'\r\n ']}"
+  [[ -z "$vol" ]] && continue
 
-    echo "---------------------------------------"
-    echo "Restoring $VOLUME_NAME from $BACKUP_FILE"
-    echo "---------------------------------------"
+  BACKUP_FILE="$BACKUP_DIR/${vol}.tar.gz"
 
-    docker volume create "$VOLUME_NAME"
+  if [[ ! -f "$BACKUP_FILE" ]]; then
+    echo -e "${YELLOW}⚠️  Skipping $vol: backup file not found ($BACKUP_FILE)${RESET}"
+    continue
+  fi
 
-    docker run --rm \
-      -v "$VOLUME_NAME":/restore-target \
-      -v "$BACKUP_DIR":/backup \
-      alpine sh -c "cd /restore-target && tar xzf /backup/$FILE >/dev/null 2>&1"
+  echo -e "${GREEN}📦 Restoring volume: $vol${RESET}"
 
-    echo -e "${YELLOW}[OK] Restored $VOLUME_NAME${RESET}"
+  # Remove existing volume (safe: services are down!)
+  if docker volume inspect "$vol" &>/dev/null; then
+    docker volume rm -f "$vol"
+  fi
+
+  # Recreate + restore
+  docker volume create "$vol" >/dev/null
+  docker run --rm \
+    -v "$vol":/restore-target \
+    -v "$BACKUP_DIR":/backup \
+    alpine sh -c "cd /restore-target && tar xzf /backup/$(basename "$BACKUP_FILE") --no-same-owner"
+
+  echo -e "${GREEN}[OK] Restored $vol${RESET}"
 done
 
-
-# --------------------------------------
-# Restart services
-# --------------------------------------
-echo "Starting Docker Compose services..."
-docker compose up -d
-
-echo "All volumes restored successfully!"
+# --- RESTART ---
+echo "🚀 Starting Docker Compose services..."
+if docker compose up -d; then
+  echo -e "${GREEN}✅ All services restarted successfully!${RESET}"
+else
+  echo -e "${RED}❌ Failed to restart services. Check 'docker compose logs'.${RESET}"
+  exit 1
+fi
