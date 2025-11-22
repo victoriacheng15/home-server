@@ -1,21 +1,12 @@
 terraform {
-  required_providers {
-    docker = {
-      source  = "kreuzwerker/docker"
-      version = "~> 3.0"
-    }
+  backend "local" {
+    path = "terraform.tfstate"
   }
 }
 
-provider "docker" {}
+module "postgres" {
+  source = "./modules/postgres-local"
 
-resource "docker_image" "hello" {
-  name = "hello-world:latest"
-}
-
-resource "docker_container" "hello" {
-  name      = "hello-world-terraform"
-  image     = docker_image.hello.name
-  attach    = false
-  must_run  = false
+  postgres_super_password = var.postgres_super_password
+  app_db_password         = var.app_db_password
 }
