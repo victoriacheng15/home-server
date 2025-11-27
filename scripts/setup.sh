@@ -1,58 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Update and upgrade system packages once at the start
-sudo apt update && sudo apt upgrade -y
-
-# Install essential tools
-sudo apt install -y btop samba
-
-# --- LOAD VOLUMES FROM SHARED LIST ---
-VOLUMES_FILE="./volumes.list"
-
-# Validate volumes.list exists and is readable
-if [[ ! -f "$VOLUMES_FILE" ]]; then
-  echo "[setup] ERROR: $VOLUMES_FILE not found. Run this script from your project root." >&2
-  exit 1
-fi
-
-# Load non-empty, non-comment lines
-mapfile -t VOLUMES < <(grep -v '^[[:space:]]*#' "$VOLUMES_FILE" | grep -v '^$')
-if [[ ${#VOLUMES[@]} -eq 0 ]]; then
-  echo "[setup] ERROR: No volumes found in $VOLUMES_FILE" >&2
-  exit 1
-fi
-
 info()  { echo "[setup] $*"; }
 error() { echo "[setup] ERROR: $*" >&2; exit 1; }
 
-setup_volumes_and_dirs() {
-    if ! command -v docker >/dev/null 2>&1; then
-        error "Docker is not installed or not in PATH"
-    fi
-
-    info "Creating named Docker volumes (if missing)..."
-    for vol in "${VOLUMES[@]}"; do
-        # Trim whitespace/newlines (in case of Windows line endings or extra spaces)
-        vol="${vol//[$'\r\n ']}"
-        if [[ -z "$vol" ]]; then
-            continue
-        fi
-
-        if docker volume inspect "$vol" &>/dev/null; then
-            info "Volume '$vol' already exists"
-        else
-            docker volume create "$vol" &>/dev/null
-            info "Created volume '$vol'"
-        fi
-    done
-}
-
 main() {
-    setup_volumes_and_dirs
+    # Update and upgrade system packages
+    info "Updating system packages..."
+    sudo apt update && sudo apt upgrade -y
+
+    # Install essential tools
+    info "Installing essential tools..."
+    sudo apt install -y btop samba
+
     info "Setup complete."
     info "Next steps:"
-    info "  - Configure Samba using instructions in this script (search 'SAMBA SETUP')"
+    info "  - Run './create_volume.sh' to create Docker volumes"
+    info "  - Configure Samba using instructions at the end of this file (search 'SAMBA SETUP')"
     info "  - Run 'make up' to start your Docker services"
     info "  - Launch 'btop' in terminal for live system monitoring"
 }

@@ -1,41 +1,37 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Colors
-YELLOW='\033[1;33m'
-GREEN='\033[1;32m'
-RED='\033[1;31m'
-RESET='\033[0m'
-
+# --- CONFIG ---
 BACKUP_BASE="$HOME/backups"
 VOLUMES_FILE="./volumes.list"
 
+info()  { echo "[restore] $*"; }
+error() { echo "[restore] ERROR: $*" >&2; exit 1; }
+
 # --- VALIDATION ---
 if [[ ! -f "$VOLUMES_FILE" ]]; then
-  echo -e "${RED}❌ ERROR: $VOLUMES_FILE not found. Run from project root.${RESET}" >&2
-  exit 1
+  error "$VOLUMES_FILE not found. Run from project root."
 fi
 
 # Load volume names (same as setup/backup)
 mapfile -t VOLUME_NAMES < <(grep -v '^[[:space:]]*#' "$VOLUMES_FILE" | grep -v '^$')
 if [[ ${#VOLUME_NAMES[@]} -eq 0 ]]; then
-  echo -e "${RED}❌ ERROR: No volumes in $VOLUMES_FILE${RESET}" >&2
-  exit 1
+  error "No volumes in $VOLUMES_FILE"
 fi
 
 # --- FIND LATEST BACKUP ---
 BACKUP_DIR=$(ls -1dt "$BACKUP_BASE"/20[0-9][0-9]-[0-1][0-9]-[0-3][0-9]/ 2>/dev/null | head -n1)
 
 if [[ -z "$BACKUP_DIR" ]]; then
-  echo -e "${RED}❌ No dated backup folders found in: $BACKUP_BASE${RESET}" >&2
-  exit 1
+  error "No dated backup folders found in: $BACKUP_BASE"
 fi
 
-echo -e "${GREEN}📁 Using latest backup: $(basename "$BACKUP_DIR")${RESET}"
+info "Using latest backup: $(basename "$BACKUP_DIR")"
 
 # --- STOP SERVICES SAFELY ---
-echo "🛑 Stopping Docker Compose services..."
+info "Stopping Docker Compose services..."
 if ! docker compose down; then
-  echo -e "${YELLOW}⚠️  Warning: Some services may not have stopped cleanly.${RESET}"
+  info "WARNING: Some services may not have stopped cleanly."
 fi
 
 # --- RESTORE EACH VOLUME ---
@@ -46,11 +42,11 @@ for vol in "${VOLUME_NAMES[@]}"; do
   BACKUP_FILE="$BACKUP_DIR/${vol}.tar.gz"
 
   if [[ ! -f "$BACKUP_FILE" ]]; then
-    echo -e "${YELLOW}⚠️  Skipping $vol: backup file not found ($BACKUP_FILE)${RESET}"
+    info "WARNING: Skipping $vol: backup file not found ($BACKUP_FILE)"
     continue
   fi
 
-  echo -e "${GREEN}📦 Restoring volume: $vol${RESET}"
+  info "Restoring volume: $vol"
 
   # Remove existing volume (safe: services are down!)
   if docker volume inspect "$vol" &>/dev/null; then
@@ -64,14 +60,13 @@ for vol in "${VOLUME_NAMES[@]}"; do
     -v "$BACKUP_DIR":/backup \
     alpine sh -c "cd /restore-target && tar xzf /backup/$(basename "$BACKUP_FILE") --no-same-owner"
 
-  echo -e "${GREEN}[OK] Restored $vol${RESET}"
+  info "Restored: $vol"
 done
 
 # --- RESTART ---
-echo "🚀 Starting Docker Compose services..."
+info "Starting Docker Compose services..."
 if docker compose up -d; then
-  echo -e "${GREEN}✅ All services restarted successfully!${RESET}"
+  info "All services restarted successfully!"
 else
-  echo -e "${RED}❌ Failed to restart services. Check 'docker compose logs'.${RESET}"
-  exit 1
+  error "Failed to restart services. Check 'docker compose logs'."
 fi
