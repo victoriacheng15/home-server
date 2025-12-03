@@ -6,6 +6,7 @@ pkgs.mkShell {
     terraform
     terraform-docs
     nodejs_24
+    go
   ];
 
   # Optional: set environment variables
@@ -13,10 +14,9 @@ pkgs.mkShell {
 
   # Optional: show shell info
   shellHook = ''
-    echo "🚀 Dev shell loaded: Terraform + Node.js"
-    echo "   Terraform: $(terraform version | head -n1)"
-    echo "   Node.js:   $(node --version)"
-    echo "   npm:       $(npm --version)"
-    echo "   Working directory: $PWD"
+    echo "🚀 Terraform: $(terraform version | head -n1)"
+    echo "🚀 Node.js:   $(node --version)"
+    echo "🚀 npm:       $(npm --version)"
+    echo "🚀 go:        $(go version)"
   '';
 }
