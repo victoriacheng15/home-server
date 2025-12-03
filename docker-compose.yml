@@ -1,4 +1,13 @@
 services:
+  proxy:
+    build: 
+      context: .
+      dockerfile: ./docker/proxy/Dockerfile
+    container_name: health_proxy
+    ports:
+      - "8085:8085"
+    restart: unless-stopped
+
   jenkins:
     build: ./docker/jenkins
     container_name: jenkins_server
@@ -59,8 +68,6 @@ services:
     volumes:
       - jupyter_data:/home/jovyan/work
       - ./notebooks:/home/jovyan/notebooks
-      - ./jupyter/src:/home/jovyan/src
-      - ./jupyter/config:/home/jovyan/config
     env_file:
       - .env
     restart: unless-stopped
