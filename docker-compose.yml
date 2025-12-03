@@ -59,9 +59,8 @@ services:
     volumes:
       - jupyter_data:/home/jovyan/work
       - ./notebooks:/home/jovyan/notebooks
-      - ./src:/home/jovyan/src
-      - ./data:/home/jovyan/data
-      - ./config:/home/jovyan/config
+      - ./jupyter/src:/home/jovyan/src
+      - ./jupyter/config:/home/jovyan/config
     env_file:
       - .env
     restart: unless-stopped
