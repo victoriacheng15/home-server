@@ -66,3 +66,21 @@ main "$@"
 #    - macOS:       smb://[server-ip]/shared
 #    - Linux:       smb://[server-ip]/shared
 #    → Log in with your Linux username & Samba password
+# === Samba INSTRUCTIONS END ===
+
+# === Jupyter SETUP INSTRUCTIONS ===
+# This config sets a secure token for Jupyter in your Docker container.
+# Run these steps AFTER your container is running:
+#
+# 1. Enter the Jupyter container shell:
+#      docker exec -it jupyter_server bash
+#
+# 2. Create the Jupyter config file (if not exists):
+#      touch /home/jovyan/.jupyter/jupyter_notebook_config.py
+#
+# 3. Set a secure token (replace 'your_secure_token_here' with your own value):
+#      echo "c.NotebookApp.token = 'your_secure_token_here'" >> /home/jovyan/.jupyter/jupyter_notebook_config.py
+#
+# ✅ Now you can access Jupyter using your token at:
+#      http://[server-ip]:8888/?token=your_secure_token_here
+# === Jupyter INSTRUCTIONS END ===
