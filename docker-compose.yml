@@ -37,8 +37,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
-    env_file:
-      - .env
 
   postgis:
     image: postgis/postgis:16-3.5-alpine
@@ -48,8 +46,6 @@ services:
     volumes:
       - postgis_data:/var/lib/postgresql/data
     restart: unless-stopped
-    env_file:
-      - .env
 
   n8n:
     image: n8nio/n8n:stable
@@ -68,8 +64,24 @@ services:
     volumes:
       - jupyter_data:/home/jovyan/work
       - ./notebooks:/home/jovyan/notebooks
-    env_file:
-      - .env
+    restart: unless-stopped
+
+  influxdb:
+    image: influxdb:2.7.12-alpine
+    container_name: influxdb_server
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:main-ubuntu
+    container_name: grafana_server
+    ports:
+      - "3001:3000"  # Grafana UI (avoid conflict with Gitea on 3000)
+    volumes:
+      - grafana_data:/var/lib/grafana
     restart: unless-stopped
 
 volumes:
@@ -85,3 +97,7 @@ volumes:
     external: true 
   postgis_data:
     external: true 
+  influxdb_data:
+    external: true
+  grafana_data:
+    external: true
