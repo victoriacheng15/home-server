@@ -21,13 +21,15 @@ The following services represent initial candidates for deployment. Not all may 
 
 | Service | Port | Purpose |
 |---------|------|---------|
-| **Jenkins** | 8080 | CI/CD pipeline automation and build management |
-| **Gitea** | 3000, 222 | Self-hosted Git server for version control |
-| **PostgreSQL** | 5432 | Relational database |
-| **PostGIS** | 5433 | PostgreSQL with geospatial extensions |
-| **n8n** | 5678 | Workflow automation and integration platform |
-| **Jupyter** | 8888 | Interactive notebooks for data analysis and exploration |
-| **Health Proxy** | 8085 | Custom Go-based health check proxy |
+| **Proxy**      | 8085      | Custom Go-based health check proxy |
+| **Jenkins**    | 8080, 50000 | CI/CD pipeline automation and build management |
+| **Gitea**      | 3000, 222 | Self-hosted Git server for version control |
+| **PostgreSQL** | 5432      | Relational database |
+| **PostGIS**    | 5433      | PostgreSQL with geospatial extensions |
+| **n8n**        | 5678      | Workflow automation and integration platform |
+| **Jupyter**    | 8888      | Interactive notebooks for data analysis and exploration |
+| **InfluxDB**   | 8086      | Time-series database for metrics and monitoring |
+| **Grafana**    | 3001      | Visualization and dashboarding for metrics |
 
 ## Project Structure
 
@@ -43,11 +45,8 @@ home-server/
 │   ├── create_volume.sh
 │   ├── backup_volume.sh
 │   └── restore_volume.sh
-├── terraform/             # Sandbox for practicing and understanding Infrastructure as Code (IaC)
+├── terraform/             # Sandbox for Infrastructure as Code (IaC)
 │   ├── main.tf
 │   └── modules/
-│       └── postgres-local/
-├── config/                # Configuration files
-├── data/                  # Persistent data
 └── docker-compose.yml     # Service definitions
 ```
