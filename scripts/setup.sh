@@ -16,8 +16,7 @@ main() {
     info "Setup complete."
     info "Next steps:"
     info "  - Run './create_volume.sh' to create Docker volumes"
-    info "  - Configure Samba using instructions at the end of this file (search 'SAMBA SETUP')"
-    info "  - Run 'make up' to start your Docker services"
+    info "  - Check out the instructions at the end of this script"
     info "  - Launch 'btop' in terminal for live system monitoring"
 }
 

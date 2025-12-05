@@ -4,3 +4,5 @@ postgres_data
 n8n_data
 jupyter_data
 postgis_data
+influxdb_data
+grafana_data
